@@ -1,0 +1,107 @@
+/*
+ * BUG#0
+ * description: 
+     miss semicolon
+ * location: 
+ *   int a = 10  (line 18)
+ * evidence: 
+ *   test.c:19: error: two or more data types in declaration specifiers
+ */
+
+BUG#1
+description:
+missing ;
+location:
+52 58
+evidence:
+gen_sort.c:60:8: error: expected ‘;’, identifier or ‘(’ before ‘long’
+ static long cur_rec = 0;
+        ^
+
+
+
+BUG#2
+description:
+har *buf =( char*)malloc(buf_size) 
+location:
+180
+evidence:
+
+
+
+BUG#3
+description:
+#include<stdio.h>
+location:
+176
+evidence:
+gen_sort.c:176:2: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+
+
+
+BUG#4
+description:
+enum { rec_len = key_len + pad_len+recno_len };
+
+location:
+49
+evidence:
+
+
+
+BUG#5
+description:
+record_t;
+location:
+57
+evidence:
+error: expected ‘;’
+
+
+BUG#6
+description:
+for (j = 0; j < 10; j++ )
+
+location:
+124
+evidence:
+eternal circle
+
+
+BUG#7
+description:
+ FILE *file = fopen(fn, "w");
+
+location:
+186
+evidence:
+cant write
+
+
+
+BUG#8
+description:
+
+location:
+
+evidence:
+
+
+
+
+BUG#9
+description:cnt < buf_nrec
+
+location:146
+evidence:<=out of range
+
+
+
+
+BUG#10
+description:
+
+location:
+
+evidence:
+

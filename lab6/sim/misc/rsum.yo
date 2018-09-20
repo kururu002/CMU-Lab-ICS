@@ -1,0 +1,47 @@
+                      | #ID: 515030910252
+                      | #Name:Bo-Han Huang
+  0x000:              | .pos 0
+                      | 
+  0x000: 30f400010000 | init:	irmovl Stack,%esp
+  0x006: 30f500010000 | 	irmovl Stack,%ebp
+  0x00c: 802c000000   |         call Main
+  0x011: 00           |         halt
+                      | 
+                      | 
+  0x014:              | 	.align 4
+  0x014:              | ele1:
+  0x014: 0a000000     | 	.long 0x00a
+  0x018: 1c000000     | 	.long ele2
+  0x01c:              | ele2:
+  0x01c: b0000000     | 	.long 0x0b0
+  0x020: 24000000     | 	.long ele3
+  0x024:              | ele3: 
+  0x024: 000c0000     |         .long 0xc00
+  0x028: 00000000     |         .long 0
+                      | 
+  0x02c: a05f         | Main:	pushl %ebp
+  0x02e: 30f214000000 | 	irmovl ele1,%edx
+  0x034: 30f000000000 | 	irmovl $0,%eax
+  0x03a: 30f300000000 | 	irmovl $0,%ebx
+  0x040: a02f         | 	pushl %edx
+  0x042: a00f         | 	pushl %eax
+  0x044: 804a000000   | 	call rsum_list
+  0x049: 00           | 	halt
+                      | 	
+                      | 
+                      | 
+  0x04a:              | rsum_list:
+  0x04a: 500404000000 | 	mrmovl 4(%esp),%eax
+  0x050: 502408000000 | 	mrmovl 8(%esp),%edx
+  0x056: 501200000000 | 	mrmovl (%edx), %ecx     
+  0x05c: 6010         | 	addl %ecx, %eax     
+  0x05e: 502204000000 | 	mrmovl 4(%edx), %edx 
+  0x064: 6332         | 	xorl %ebx, %edx  
+  0x066: 7374000000   | 	je End
+  0x06b: a02f         | 	pushl %edx
+  0x06d: a00f         | 	pushl %eax	
+  0x06f: 804a000000   | 	call rsum_list
+  0x074: 90           | End:	ret
+                      | 
+  0x100:              | 	.pos 0x100
+  0x100:              | Stack:

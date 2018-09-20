@@ -1,0 +1,51 @@
+                      | #ID: 515030910252
+                      | #Name:Bo-Han Huang
+  0x000:              | .pos 0
+                      | 
+  0x000: 30f400050000 | init:	irmovl Stack,%esp
+  0x006: 30f500050000 | 	irmovl Stack,%ebp
+  0x00c: 802c000000   |         call Main
+  0x011: 00           |         halt
+  0x014:              | .align 4
+  0x014:              | src:
+  0x014: 0a000000     | 	.long 0x00a
+  0x018: b0000000     | 	.long 0x0b0
+  0x01c: 000c0000     | 	.long 0xc00
+                      | 
+                      | 
+  0x020:              | dest:
+  0x020: 11010000     | 	.long 0x111
+  0x024: 22020000     | 	.long 0x222
+  0x028: 33030000     | 	.long 0x333
+                      | 
+  0x02c: a05f         | Main:	pushl %ebp
+  0x02e: 30f214000000 | 	irmovl src,%edx
+  0x034: a02f         | 	pushl %edx
+  0x036: 30f220000000 | 	irmovl dest,%edx
+  0x03c: a02f         | 	pushl %edx
+  0x03e: 30f20c000000 | 	irmovl $12,%edx
+  0x044: a02f         | 	pushl %edx
+  0x046: 30f000000000 | 	irmovl $0,%eax
+  0x04c: 30f704000000 | 	irmovl $4,%edi
+  0x052: 8058000000   | 	call copy_block
+  0x057: 00           | 	halt
+                      | 	
+                      | 
+                      | 
+  0x058:              | copy_block:
+  0x058: 503404000000 | 	mrmovl 4(%esp),%ebx
+  0x05e: 501408000000 | 	mrmovl 8(%esp),%ecx
+  0x064: 50240c000000 | 	mrmovl 12(%esp), %edx
+  0x06a:              | Loop:
+  0x06a: 506200000000 | 	mrmovl (%edx),%esi
+  0x070: 6072         | 	addl %edi,%edx     
+  0x072: 406100000000 | 	rmmovl %esi,(%ecx)
+  0x078: 6071         | 	addl %edi,%ecx
+  0x07a: 6360         | 	xorl %esi, %eax
+  0x07c: 6173         | 	subl %edi,%ebx
+  0x07e: 766a000000   | 	jg Loop
+                      | 	
+  0x083: 90           | End:	ret
+                      | 
+  0x500:              | 	.pos 0x500
+  0x500:              | Stack:

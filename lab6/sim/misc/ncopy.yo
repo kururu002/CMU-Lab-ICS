@@ -1,0 +1,90 @@
+                      | #/* $begin ncopy-ys */
+                      | ##################################################################
+                      | # ncopy.ys - Copy a src block of len ints to dst.
+                      | # Return the number of positive ints (>0) contained in src.
+                      | #
+                      | # Include your name and ID here.
+                      | #Name:Bo-Han Huang
+                      | #ID:515030910252
+                      | # Describe how and why you modified the baseline code.
+                      | #
+                      | ##################################################################
+                      | # Do not modify this portion
+                      | # Function prologue.
+  0x000: a05f         | ncopy:	pushl %ebp		# Save old frame pointer
+  0x002: 2045         | 	rrmovl %esp,%ebp	# Set up new frame pointer
+  0x004: a06f         | 	pushl %esi		# Save callee-save regs
+  0x006: a03f         | 	pushl %ebx
+  0x008: a07f         | 	pushl %edi
+  0x00a: 503508000000 | 	mrmovl 8(%ebp),%ebx	# src
+  0x010: 502510000000 | 	mrmovl 16(%ebp),%edx	# len
+  0x016: 50150c000000 | 	mrmovl 12(%ebp),%ecx	# dst
+                      | 
+                      | ##################################################################
+                      | # You can modify this portion
+                      | 	# Loop header
+  0x01c: 6300         | 	xorl %eax,%eax		# count = 0;
+  0x01e: c0f2feffffff | 	iaddl $-2,%edx		# len <= 2?
+  0x024: 762e000000   | 	jg Loop
+  0x029: 70d2000000   | 	jmp Remain
+                      | 
+  0x02e: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
+  0x034: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x03a: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x03c: 7159000000   | 	jle Plus0		# if so, goto Plus0:
+  0x041: 506304000000 | Plus1:	mrmovl 4(%ebx), %esi	# read val from src...
+  0x047: 406104000000 | 	rmmovl %esi, 4(%ecx)	# ...and store it to dst
+  0x04d: 6266         | 	andl %esi, %esi		# val > 0?
+  0x04f: 76ae000000   | 	jg Plus02		# if so, goto Plus1:
+  0x054: 708a000000   | 	jmp Plus01
+  0x059: 506304000000 | Plus0:	mrmovl 4(%ebx), %esi	# read val from src...
+  0x05f: 406104000000 | 	rmmovl %esi, 4(%ecx)	# ...and store it to dst
+  0x065: 6266         | 	andl %esi, %esi		# val > 0?
+  0x067: 768a000000   | 	jg Plus01
+  0x06c: c0f308000000 | Plus00:	iaddl $8,%ebx
+  0x072: c0f108000000 | 	iaddl $8,%ecx
+  0x078: c0f2feffffff | 	iaddl $-2, %edx		# len-=2
+  0x07e: 6222         | 	andl %edx,%edx		# len > 0?
+  0x080: 762e000000   | 	jg Loop			# if so, goto Loop:
+  0x085: 70d2000000   | 	jmp Remain
+  0x08a: c0f001000000 | Plus01: iaddl $1,%eax
+  0x090: c0f308000000 | 	iaddl $8,%ebx
+  0x096: c0f108000000 | 	iaddl $8,%ecx
+  0x09c: c0f2feffffff | 	iaddl $-2, %edx		# len-=2
+  0x0a2: 6222         | 	andl %edx,%edx		# len > 0?
+  0x0a4: 762e000000   | 	jg Loop			# if so, goto Loop:
+  0x0a9: 70d2000000   | 	jmp Remain
+  0x0ae: c0f002000000 | Plus02:	iaddl $2,%eax
+  0x0b4: c0f308000000 | 	iaddl $8,%ebx
+  0x0ba: c0f108000000 | 	iaddl $8,%ecx
+  0x0c0: c0f2feffffff | 	iaddl $-2, %edx		# len-=2
+  0x0c6: 6222         | 	andl %edx,%edx		# len > 0?
+  0x0c8: 762e000000   | 	jg Loop			# if so, goto Loop:
+  0x0cd: 70d2000000   | 	jmp Remain
+                      | 
+                      | 
+  0x0d2: c0f202000000 | Remain:	iaddl $2,%edx
+  0x0d8: 6222         | 	andl %edx,%edx
+  0x0da: 730a010000   | 	je Done
+  0x0df: 506300000000 | 	mrmovl (%ebx), %esi	# read val from src...
+  0x0e5: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x0eb: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x0ed: 76f8000000   | 	jg GOGO
+  0x0f2: c0f001000000 | 	iaddl $1,%eax
+  0x0f8: c0f304000000 | GOGO:	iaddl $4,%ebx
+  0x0fe: c0f104000000 | 	iaddl $4,%ecx
+  0x104: c0f2ffffffff | 	iaddl $-1,%edx
+                      | ##################################################################
+                      | # Do not modify the following section of code
+                      | # Function epilogue.
+  0x10a:              | Done:
+  0x10a: b07f         | 	popl %edi               # Restore callee-save registers
+  0x10c: b03f         | 	popl %ebx
+  0x10e: b06f         | 	popl %esi
+  0x110: 2054         | 	rrmovl %ebp, %esp
+  0x112: b05f         | 	popl %ebp
+  0x114: 90           | 	ret
+                      | ##################################################################
+                      | # Keep the following label at the end of your function
+  0x115:              | End:
+                      | #/* $end ncopy-ys */

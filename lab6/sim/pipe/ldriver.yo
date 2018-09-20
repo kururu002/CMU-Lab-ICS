@@ -1,0 +1,268 @@
+                      | #######################################################################
+                      | # Test for copying block of size 63;
+                      | #######################################################################
+  0x000:              | 	.pos 0
+  0x000: 30f484030000 | main:	irmovl Stack, %esp  	# Set up stack pointer
+  0x006: 30f584030000 | 	irmovl Stack, %ebp  	# Set up base pointer
+                      | 
+                      | 	# Set up arguments for copy function and then invoke it
+  0x00c: 30f03f000000 | 	irmovl $63, %eax		# src and dst have 63 elements
+  0x012: a00f         | 	pushl %eax
+  0x014: 30f044020000 | 	irmovl dest, %eax	# dst array
+  0x01a: a00f         | 	pushl %eax
+  0x01c: 30f038010000 | 	irmovl src, %eax	# src array
+  0x022: a00f         | 	pushl %eax
+  0x024: 802a000000   | 	call ncopy		 
+  0x029: 00           | 	halt			# should halt with num nonzeros in %eax
+  0x02a:              | StartFun:
+                      | #/* $begin ncopy-ys */
+                      | ##################################################################
+                      | # ncopy.ys - Copy a src block of len ints to dst.
+                      | # Return the number of positive ints (>0) contained in src.
+                      | #Name:Bo-Han Huang
+                      | #ID:515030910252
+                      | # Describe how and why you modified the baseline code.
+                      | #using iaddl and Unroll loop by 2 to improve performance
+                      | #It can be optimized if there's more branch(which means more codes) or better jumping instructions  
+                      | ##################################################################
+                      | # Do not modify this portion
+                      | # Function prologue.
+  0x02a: a05f         | ncopy:	pushl %ebp		# Save old frame pointer
+  0x02c: 2045         | 	rrmovl %esp,%ebp	# Set up new frame pointer
+  0x02e: a06f         | 	pushl %esi		# Save callee-save regs
+  0x030: a03f         | 	pushl %ebx
+  0x032: a07f         | 	pushl %edi
+  0x034: 503508000000 | 	mrmovl 8(%ebp),%ebx	# src
+  0x03a: 502510000000 | 	mrmovl 16(%ebp),%edx	# len
+  0x040: 50150c000000 | 	mrmovl 12(%ebp),%ecx	# dst
+                      | 
+                      | ##################################################################
+                      | # You can modify this portion
+                      | 	# Loop header
+  0x046: 6300         | 	xorl %eax,%eax		# count = 0;
+  0x048: c0f2feffffff | 	iaddl $-2,%edx		# len <= 2?
+  0x04e: 7558000000   | 	jge Loop
+  0x053: 70f2000000   | 	jmp Remain
+                      | 
+  0x058: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
+  0x05e: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x064: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x066: 71a2000000   | 	jle Plus0		# if so, goto Plus0:
+  0x06b: 506304000000 | Plus1:	mrmovl 4(%ebx), %esi	# read val from src...
+  0x071: 406104000000 | 	rmmovl %esi, 4(%ecx)	# ...and store it to dst
+  0x077: 6266         | 	andl %esi, %esi		# val > 0?
+  0x079: 76d3000000   | 	jg Plus02		# if so, goto Plus02:
+  0x07e: c0f001000000 | Plus01: iaddl $1,%eax
+  0x084: c0f308000000 | 	iaddl $8,%ebx
+  0x08a: c0f108000000 | 	iaddl $8,%ecx
+  0x090: c0f2feffffff | 	iaddl $-2, %edx		# len-=2
+  0x096: 6222         | 	andl %edx,%edx		# len > 0?
+  0x098: 7558000000   | 	jge Loop			# if so, goto Loop:
+  0x09d: 70f2000000   | 	jmp Remain
+  0x0a2: 506304000000 | Plus0:	mrmovl 4(%ebx), %esi	# read val from src...
+  0x0a8: 406104000000 | 	rmmovl %esi, 4(%ecx)	# ...and store it to dst
+  0x0ae: 6266         | 	andl %esi, %esi		# val > 0?
+  0x0b0: 767e000000   | 	jg Plus01		#if so, goto Plus01
+  0x0b5: c0f308000000 | Plus00:	iaddl $8,%ebx
+  0x0bb: c0f108000000 | 	iaddl $8,%ecx
+  0x0c1: c0f2feffffff | 	iaddl $-2, %edx		# len-=2
+  0x0c7: 6222         | 	andl %edx,%edx		# len > 0?
+  0x0c9: 7558000000   | 	jge Loop		# if so, goto Loop:
+  0x0ce: 70f2000000   | 	jmp Remain
+                      | 
+  0x0d3: c0f002000000 | Plus02:	iaddl $2,%eax
+  0x0d9: c0f308000000 | 	iaddl $8,%ebx
+  0x0df: c0f108000000 | 	iaddl $8,%ecx
+  0x0e5: c0f2feffffff | 	iaddl $-2, %edx		# len-=2
+  0x0eb: 6222         | 	andl %edx,%edx		# len > 0?
+  0x0ed: 7558000000   | 	jge Loop		# if so, goto Loop:
+                      | 	
+                      | 
+                      | 
+  0x0f2: c0f202000000 | Remain:	iaddl $2,%edx		#recover real edx
+  0x0f8: 6222         | 	andl %edx,%edx		#if len==0
+  0x0fa: 732a010000   | 	je Done			#goto Done
+  0x0ff: 506300000000 | 	mrmovl (%ebx), %esi	# read val from src...
+  0x105: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x10b: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x10d: 7118010000   | 	jle GOGO		#jmp over next instruction
+  0x112: c0f001000000 | 	iaddl $1,%eax
+  0x118: c0f304000000 | GOGO:	iaddl $4,%ebx
+  0x11e: c0f104000000 | 	iaddl $4,%ecx
+  0x124: c0f2ffffffff | 	iaddl $-1,%edx
+                      | ##################################################################
+                      | # Do not modify the following section of code
+                      | # Function epilogue.
+  0x12a:              | Done:
+  0x12a: b07f         | 	popl %edi               # Restore callee-save registers
+  0x12c: b03f         | 	popl %ebx
+  0x12e: b06f         | 	popl %esi
+  0x130: 2054         | 	rrmovl %ebp, %esp
+  0x132: b05f         | 	popl %ebp
+  0x134: 90           | 	ret
+                      | ##################################################################
+                      | # Keep the following label at the end of your function
+  0x135:              | End:
+                      | #/* $end ncopy-ys */
+  0x135:              | EndFun:
+                      | 
+                      | ###############################
+                      | # Source and destination blocks 
+                      | ###############################
+  0x138:              | 	.align 4
+  0x138:              | src:
+  0x138: 01000000     | 	.long 1
+  0x13c: 02000000     | 	.long 2
+  0x140: fdffffff     | 	.long -3
+  0x144: fcffffff     | 	.long -4
+  0x148: 05000000     | 	.long 5
+  0x14c: faffffff     | 	.long -6
+  0x150: f9ffffff     | 	.long -7
+  0x154: 08000000     | 	.long 8
+  0x158: 09000000     | 	.long 9
+  0x15c: 0a000000     | 	.long 10
+  0x160: 0b000000     | 	.long 11
+  0x164: 0c000000     | 	.long 12
+  0x168: f3ffffff     | 	.long -13
+  0x16c: f2ffffff     | 	.long -14
+  0x170: f1ffffff     | 	.long -15
+  0x174: 10000000     | 	.long 16
+  0x178: efffffff     | 	.long -17
+  0x17c: 12000000     | 	.long 18
+  0x180: 13000000     | 	.long 19
+  0x184: ecffffff     | 	.long -20
+  0x188: 15000000     | 	.long 21
+  0x18c: 16000000     | 	.long 22
+  0x190: e9ffffff     | 	.long -23
+  0x194: e8ffffff     | 	.long -24
+  0x198: e7ffffff     | 	.long -25
+  0x19c: 1a000000     | 	.long 26
+  0x1a0: 1b000000     | 	.long 27
+  0x1a4: e4ffffff     | 	.long -28
+  0x1a8: e3ffffff     | 	.long -29
+  0x1ac: 1e000000     | 	.long 30
+  0x1b0: e1ffffff     | 	.long -31
+  0x1b4: 20000000     | 	.long 32
+  0x1b8: dfffffff     | 	.long -33
+  0x1bc: deffffff     | 	.long -34
+  0x1c0: ddffffff     | 	.long -35
+  0x1c4: dcffffff     | 	.long -36
+  0x1c8: dbffffff     | 	.long -37
+  0x1cc: daffffff     | 	.long -38
+  0x1d0: 27000000     | 	.long 39
+  0x1d4: 28000000     | 	.long 40
+  0x1d8: 29000000     | 	.long 41
+  0x1dc: 2a000000     | 	.long 42
+  0x1e0: d5ffffff     | 	.long -43
+  0x1e4: 2c000000     | 	.long 44
+  0x1e8: 2d000000     | 	.long 45
+  0x1ec: 2e000000     | 	.long 46
+  0x1f0: d1ffffff     | 	.long -47
+  0x1f4: 30000000     | 	.long 48
+  0x1f8: cfffffff     | 	.long -49
+  0x1fc: ceffffff     | 	.long -50
+  0x200: cdffffff     | 	.long -51
+  0x204: ccffffff     | 	.long -52
+  0x208: 35000000     | 	.long 53
+  0x20c: 36000000     | 	.long 54
+  0x210: 37000000     | 	.long 55
+  0x214: c8ffffff     | 	.long -56
+  0x218: 39000000     | 	.long 57
+  0x21c: c6ffffff     | 	.long -58
+  0x220: 3b000000     | 	.long 59
+  0x224: 3c000000     | 	.long 60
+  0x228: c3ffffff     | 	.long -61
+  0x22c: c2ffffff     | 	.long -62
+  0x230: c1ffffff     | 	.long -63
+  0x234: fadebc00     | 	.long 0xbcdefa # This shouldn't get moved
+                      | 
+  0x240:              | 	.align 16
+  0x240:              | Predest:
+  0x240: fadebc00     | 	.long 0xbcdefa
+  0x244:              | dest:
+  0x244: abefcd00     | 	.long 0xcdefab
+  0x248: abefcd00     | 	.long 0xcdefab
+  0x24c: abefcd00     | 	.long 0xcdefab
+  0x250: abefcd00     | 	.long 0xcdefab
+  0x254: abefcd00     | 	.long 0xcdefab
+  0x258: abefcd00     | 	.long 0xcdefab
+  0x25c: abefcd00     | 	.long 0xcdefab
+  0x260: abefcd00     | 	.long 0xcdefab
+  0x264: abefcd00     | 	.long 0xcdefab
+  0x268: abefcd00     | 	.long 0xcdefab
+  0x26c: abefcd00     | 	.long 0xcdefab
+  0x270: abefcd00     | 	.long 0xcdefab
+  0x274: abefcd00     | 	.long 0xcdefab
+  0x278: abefcd00     | 	.long 0xcdefab
+  0x27c: abefcd00     | 	.long 0xcdefab
+  0x280: abefcd00     | 	.long 0xcdefab
+  0x284: abefcd00     | 	.long 0xcdefab
+  0x288: abefcd00     | 	.long 0xcdefab
+  0x28c: abefcd00     | 	.long 0xcdefab
+  0x290: abefcd00     | 	.long 0xcdefab
+  0x294: abefcd00     | 	.long 0xcdefab
+  0x298: abefcd00     | 	.long 0xcdefab
+  0x29c: abefcd00     | 	.long 0xcdefab
+  0x2a0: abefcd00     | 	.long 0xcdefab
+  0x2a4: abefcd00     | 	.long 0xcdefab
+  0x2a8: abefcd00     | 	.long 0xcdefab
+  0x2ac: abefcd00     | 	.long 0xcdefab
+  0x2b0: abefcd00     | 	.long 0xcdefab
+  0x2b4: abefcd00     | 	.long 0xcdefab
+  0x2b8: abefcd00     | 	.long 0xcdefab
+  0x2bc: abefcd00     | 	.long 0xcdefab
+  0x2c0: abefcd00     | 	.long 0xcdefab
+  0x2c4: abefcd00     | 	.long 0xcdefab
+  0x2c8: abefcd00     | 	.long 0xcdefab
+  0x2cc: abefcd00     | 	.long 0xcdefab
+  0x2d0: abefcd00     | 	.long 0xcdefab
+  0x2d4: abefcd00     | 	.long 0xcdefab
+  0x2d8: abefcd00     | 	.long 0xcdefab
+  0x2dc: abefcd00     | 	.long 0xcdefab
+  0x2e0: abefcd00     | 	.long 0xcdefab
+  0x2e4: abefcd00     | 	.long 0xcdefab
+  0x2e8: abefcd00     | 	.long 0xcdefab
+  0x2ec: abefcd00     | 	.long 0xcdefab
+  0x2f0: abefcd00     | 	.long 0xcdefab
+  0x2f4: abefcd00     | 	.long 0xcdefab
+  0x2f8: abefcd00     | 	.long 0xcdefab
+  0x2fc: abefcd00     | 	.long 0xcdefab
+  0x300: abefcd00     | 	.long 0xcdefab
+  0x304: abefcd00     | 	.long 0xcdefab
+  0x308: abefcd00     | 	.long 0xcdefab
+  0x30c: abefcd00     | 	.long 0xcdefab
+  0x310: abefcd00     | 	.long 0xcdefab
+  0x314: abefcd00     | 	.long 0xcdefab
+  0x318: abefcd00     | 	.long 0xcdefab
+  0x31c: abefcd00     | 	.long 0xcdefab
+  0x320: abefcd00     | 	.long 0xcdefab
+  0x324: abefcd00     | 	.long 0xcdefab
+  0x328: abefcd00     | 	.long 0xcdefab
+  0x32c: abefcd00     | 	.long 0xcdefab
+  0x330: abefcd00     | 	.long 0xcdefab
+  0x334: abefcd00     | 	.long 0xcdefab
+  0x338: abefcd00     | 	.long 0xcdefab
+  0x33c: abefcd00     | 	.long 0xcdefab
+  0x340:              | Postdest:
+  0x340: bcfade00     | 	.long 0xdefabc
+                      | 
+  0x344:              | .align 4
+                      | # Run time stack
+  0x344: 00000000     | 	.long 0
+  0x348: 00000000     | 	.long 0
+  0x34c: 00000000     | 	.long 0
+  0x350: 00000000     | 	.long 0
+  0x354: 00000000     | 	.long 0
+  0x358: 00000000     | 	.long 0
+  0x35c: 00000000     | 	.long 0
+  0x360: 00000000     | 	.long 0
+  0x364: 00000000     | 	.long 0
+  0x368: 00000000     | 	.long 0
+  0x36c: 00000000     | 	.long 0
+  0x370: 00000000     | 	.long 0
+  0x374: 00000000     | 	.long 0
+  0x378: 00000000     | 	.long 0
+  0x37c: 00000000     | 	.long 0
+  0x380: 00000000     | 	.long 0
+                      | 
+  0x384:              | Stack:

@@ -1,0 +1,51 @@
+#ID: 515030910252
+#Name:Bo-Han Huang
+.pos 0
+
+init:	irmovl Stack,%esp
+	irmovl Stack,%ebp
+        call Main
+        halt
+.align 4
+src:
+	.long 0x00a
+	.long 0x0b0
+	.long 0xc00
+
+
+dest:
+	.long 0x111
+	.long 0x222
+	.long 0x333
+
+Main:	pushl %ebp
+	irmovl src,%edx
+	pushl %edx
+	irmovl dest,%edx
+	pushl %edx
+	irmovl $12,%edx
+	pushl %edx
+	irmovl $0,%eax
+	irmovl $4,%edi
+	call copy_block
+	halt
+	
+
+
+copy_block:
+	mrmovl 4(%esp),%ebx
+	mrmovl 8(%esp),%ecx
+	mrmovl 12(%esp), %edx
+Loop:
+	mrmovl (%edx),%esi
+	addl %edi,%edx     
+	rmmovl %esi,(%ecx)
+	addl %edi,%ecx
+	xorl %esi, %eax
+	subl %edi,%ebx
+	jg Loop
+	
+End:	ret
+
+	.pos 0x500
+Stack:
